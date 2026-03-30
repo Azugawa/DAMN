@@ -1,0 +1,27 @@
+# 核心深度学习框架 (可选，用于本地模型)
+# torch>=2.0.0
+# transformers>=4.37.0
+
+# 语音识别
+faster-whisper>=1.0.0
+pyaudio>=0.2.13
+scipy>=1.10.0
+
+# 语音合成
+edge-tts>=6.1.0
+
+# HTTP 客户端
+httpx>=0.25.0
+requests>=2.31.0
+
+# 搜索功能
+tavily-python>=0.3.0
+duckduckgo-search>=4.0.0
+
+# 工具库
+python-dotenv>=1.0.0
+pygame>=2.5.0
+
+# 其他
+aiofiles>=23.0.0
+huggingface_hub>=0.20.0

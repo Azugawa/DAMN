@@ -1,0 +1,388 @@
+{
+  "part1_topics": [
+    {
+      "topic": "Work/Studies",
+      "questions": [
+        "Do you work or are you a student?",
+        "What do you like most about your work/studies?",
+        "Why did you choose this job/major?",
+        "What is the most challenging part?",
+        "Do you plan to continue in this field?"
+      ]
+    },
+    {
+      "topic": "Hometown",
+      "questions": [
+        "Where is your hometown?",
+        "What do you like most about your hometown?",
+        "Is there anything you would change about your hometown?",
+        "How long have you lived there?",
+        "What's the weather like in your hometown?"
+      ]
+    },
+    {
+      "topic": "Accommodation",
+      "questions": [
+        "Do you live in a house or a flat?",
+        "Who do you live with?",
+        "What's your favourite room in your home?",
+        "Would you like to move to a different home?",
+        "How long have you lived there?"
+      ]
+    },
+    {
+      "topic": "Hobbies",
+      "questions": [
+        "What do you like to do in your free time?",
+        "How long have you had this hobby?",
+        "Do you prefer doing hobbies alone or with others?",
+        "Did you have different hobbies when you were younger?",
+        "Would you like to try a new hobby?"
+      ]
+    },
+    {
+      "topic": "Music",
+      "questions": [
+        "Do you like listening to music?",
+        "What kind of music do you like?",
+        "Do you prefer listening to music alone or with others?",
+        "Have you ever been to a concert?",
+        "Can you play any musical instruments?"
+      ]
+    },
+    {
+      "topic": "Reading",
+      "questions": [
+        "Do you like reading books?",
+        "What kind of books do you like to read?",
+        "Do you prefer reading paper books or e-books?",
+        "How often do you read?",
+        "What was your favourite book as a child?"
+      ]
+    },
+    {
+      "topic": "Sports",
+      "questions": [
+        "Do you like sports?",
+        "What sports do you play?",
+        "Do you prefer watching or playing sports?",
+        "How often do you exercise?",
+        "What's the most popular sport in your country?"
+      ]
+    },
+    {
+      "topic": "Travel",
+      "questions": [
+        "Do you like travelling?",
+        "Where did you go for your last holiday?",
+        "Do you prefer travelling alone or with others?",
+        "What's your dream destination?",
+        "Do you like beach holidays or city breaks?"
+      ]
+    },
+    {
+      "topic": "Food",
+      "questions": [
+        "What's your favourite food?",
+        "Do you like cooking?",
+        "Do you prefer eating at home or in restaurants?",
+        "What's a typical meal in your country?",
+        "Have you ever tried foreign food?"
+      ]
+    },
+    {
+      "topic": "Weather",
+      "questions": [
+        "What's the weather like in your country?",
+        "Do you prefer hot or cold weather?",
+        "What's your favourite season?",
+        "Does the weather affect your mood?",
+        "Do you check the weather forecast often?"
+      ]
+    }
+  ],
+  "part2_topics": [
+    {
+      "category": "Describe a person",
+      "prompts": [
+        {
+          "title": "A person who has influenced you",
+          "points": [
+            "Who this person is",
+            "How you know this person",
+            "What qualities they have",
+            "And explain why they have influenced you"
+          ]
+        },
+        {
+          "title": "A famous person you admire",
+          "points": [
+            "Who this person is",
+            "What they have done",
+            "Why they are famous",
+            "And explain why you admire them"
+          ]
+        },
+        {
+          "title": "A family member you spend time with",
+          "points": [
+            "Who this person is",
+            "How often you spend time together",
+            "What you do together",
+            "And explain why you enjoy spending time with them"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Describe a place",
+      "prompts": [
+        {
+          "title": "A place you have visited that you remember well",
+          "points": [
+            "Where it is",
+            "When you went there",
+            "What you did there",
+            "And explain why you remember it well"
+          ]
+        },
+        {
+          "title": "Your ideal home",
+          "points": [
+            "Where it would be",
+            "What it would look like",
+            "What facilities it would have",
+            "And explain why it would be your ideal home"
+          ]
+        },
+        {
+          "title": "A quiet place you like to go to",
+          "points": [
+            "Where it is",
+            "How often you go there",
+            "What you do there",
+            "And explain why you like this place"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Describe an object",
+      "prompts": [
+        {
+          "title": "A gift you received that was important to you",
+          "points": [
+            "What the gift was",
+            "Who gave it to you",
+            "When you received it",
+            "And explain why it was important to you"
+          ]
+        },
+        {
+          "title": "Something you own that is valuable to you",
+          "points": [
+            "What it is",
+            "How you got it",
+            "How long you have had it",
+            "And explain why it is valuable to you"
+          ]
+        },
+        {
+          "title": "A piece of technology you find useful",
+          "points": [
+            "What it is",
+            "How often you use it",
+            "What you use it for",
+            "And explain why you find it useful"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Describe an event",
+      "prompts": [
+        {
+          "title": "An important event in your life",
+          "points": [
+            "What the event was",
+            "When it happened",
+            "Who was there",
+            "And explain why it was important"
+          ]
+        },
+        {
+          "title": "A celebration you enjoyed",
+          "points": [
+            "What was being celebrated",
+            "Who was there",
+            "What happened",
+            "And explain why you enjoyed it"
+          ]
+        },
+        {
+          "title": "A time you met someone interesting",
+          "points": [
+            "When and where it happened",
+            "Who you met",
+            "What happened",
+            "And explain why you found them interesting"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Describe an activity",
+      "prompts": [
+        {
+          "title": "An activity you enjoy doing in your free time",
+          "points": [
+            "What the activity is",
+            "How often you do it",
+            "Who you do it with",
+            "And explain why you enjoy it"
+          ]
+        },
+        {
+          "title": "A sport or physical activity you have done",
+          "points": [
+            "What it is",
+            "How long you have done it",
+            "How often you do it",
+            "And explain why you think it is beneficial"
+          ]
+        },
+        {
+          "title": "A skill you learned that you think is useful",
+          "points": [
+            "What the skill is",
+            "How you learned it",
+            "How long it took to learn",
+            "And explain why you think it is useful"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Describe a memory",
+      "prompts": [
+        {
+          "title": "A happy memory from your childhood",
+          "points": [
+            "What the memory is",
+            "When it happened",
+            "Who was there",
+            "And explain why it makes you happy"
+          ]
+        },
+        {
+          "title": "A time you achieved something",
+          "points": [
+            "What you achieved",
+            "When it happened",
+            "How you achieved it",
+            "And explain how you felt about it"
+          ]
+        },
+        {
+          "title": "A memorable journey you made",
+          "points": [
+            "Where you went",
+            "Why you went there",
+            "What happened during the journey",
+            "And explain why it was memorable"
+          ]
+        }
+      ]
+    }
+  ],
+  "part3_themes": [
+    {
+      "theme": "Education",
+      "questions": [
+        "How has education changed in recent years?",
+        "What role does technology play in education?",
+        "Do you think university education is still valuable today?",
+        "Should education be free for everyone?",
+        "What qualities make a good teacher?",
+        "Is it better to study online or in a traditional classroom?"
+      ]
+    },
+    {
+      "theme": "Technology",
+      "questions": [
+        "How has technology changed the way we communicate?",
+        "What are the benefits and drawbacks of social media?",
+        "Do you think AI will replace many jobs in the future?",
+        "Are people too dependent on technology these days?",
+        "How can we protect our privacy in the digital age?",
+        "What technological developments do you expect in the next 10 years?"
+      ]
+    },
+    {
+      "theme": "Environment",
+      "questions": [
+        "What environmental problems do we face today?",
+        "How can individuals help protect the environment?",
+        "Do you think governments are doing enough to combat climate change?",
+        "Should companies be held responsible for environmental damage?",
+        "Is it possible to balance economic growth with environmental protection?",
+        "What role can education play in environmental protection?"
+      ]
+    },
+    {
+      "theme": "Society",
+      "questions": [
+        "How has family structure changed in recent decades?",
+        "What are the advantages and disadvantages of living in a big city?",
+        "Do you think people have become more individualistic?",
+        "How can we reduce social inequality?",
+        "What impact does immigration have on society?",
+        "Is traditional culture still important in modern society?"
+      ]
+    },
+    {
+      "theme": "Work",
+      "questions": [
+        "What factors are important when choosing a career?",
+        "Do you think job satisfaction is more important than salary?",
+        "How has the pandemic changed the way we work?",
+        "What are the advantages of remote working?",
+        "Should retirement age be increased?",
+        "How can companies attract and retain talented employees?"
+      ]
+    },
+    {
+      "theme": "Culture",
+      "questions": [
+        "How important is it to preserve traditional culture?",
+        "What impact does globalization have on culture?",
+        "Should museums be free to the public?",
+        "How can we promote cultural understanding between countries?",
+        "Is it important for children to learn about their cultural heritage?",
+        "What role does food play in culture?"
+      ]
+    },
+    {
+      "theme": "Health",
+      "questions": [
+        "What can people do to stay healthy?",
+        "Should healthcare be free for everyone?",
+        "How can governments encourage people to live healthier lives?",
+        "Is mental health as important as physical health?",
+        "What impact does diet have on health?",
+        "Do you think modern lifestyles are healthy?"
+      ]
+    },
+    {
+      "theme": "Media",
+      "questions": [
+        "How has social media changed the way we get news?",
+        "Can we trust everything we read online?",
+        "What impact does advertising have on people?",
+        "Should celebrities have more responsibility as role models?",
+        "How has streaming changed the entertainment industry?",
+        "Is traditional media (TV, newspapers) still relevant?"
+      ]
+    }
+  ]
+}

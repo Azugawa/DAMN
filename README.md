@@ -92,7 +92,13 @@ ZHIPU_API_KEY=your_api_key_here
 TAVILY_API_KEY=your_api_key_here
 ```
 
-### 3. 运行程序
+### 3. 下载whisper模型（国内镜像）
+
+```bash
+python download_whisper.py
+```
+
+### 4. 运行程序
 
 ```bash
 python main.py

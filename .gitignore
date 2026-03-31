@@ -38,7 +38,7 @@ tmp/
 
 # 对话历史
 data/history/*.json
-data/history/*.db
+data/*.db
 
 # IDE
 .vscode/

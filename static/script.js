@@ -23,12 +23,43 @@ const stopRecordingBtn = document.getElementById('stopRecordingBtn');
 const historyList = document.getElementById('historyList');
 const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
 
+// 纯语音模式相关元素
+const voiceOnlyToggleContainer = document.getElementById('voiceOnlyToggleContainer');
+const voiceOnlyToggle = document.getElementById('voiceOnlyToggle');
+const normalViewContainer = document.getElementById('normalViewContainer');
+const voiceOnlyContainer = document.getElementById('voiceOnlyContainer');
+const inputContainer = document.getElementById('inputContainer');
+const voiceTopicDisplay = document.getElementById('voiceTopicDisplay');
+const voiceTopicContent = document.getElementById('voiceTopicContent');
+const voiceBigBtn = document.getElementById('voiceBigBtn');
+const voiceTextInput = document.getElementById('voiceTextInput');
+const voiceSendBtn = document.getElementById('voiceSendBtn');
+const showHintBtn = document.getElementById('showHintBtn');
+const toggleTranscriptBtn = document.getElementById('toggleTranscriptBtn');
+const showVocabBtn = document.getElementById('showVocabBtn');
+const voiceTranscriptArea = document.getElementById('voiceTranscriptArea');
+const transcriptContent = document.getElementById('transcriptContent');
+const challengeMeBtn = document.getElementById('challengeMeBtn');
+const stopTtsBtn = document.getElementById('stopTtsBtn');
+const sendStopTtsBtn = document.getElementById('sendStopTtsBtn');
+
+// 生词本和提示弹窗
+const vocabModal = document.getElementById('vocabModal');
+const vocabModalBody = document.getElementById('vocabModalBody');
+const vocabCloseBtn = document.getElementById('vocabCloseBtn');
+const hintModal = document.getElementById('hintModal');
+const hintModalBody = document.getElementById('hintModalBody');
+const hintCloseBtn = document.getElementById('hintCloseBtn');
+
 // 状态
 let isRecording = false;
 let mediaRecorder = null;
 let audioChunks = [];
 let initialized = false;
 let currentSessionId = null;
+let isVoiceOnlyMode = false;  // 纯语音模式开关
+let currentTopic = '';  // 当前话题
+let currentAudio = null;  // 当前播放的音频对象
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -76,6 +107,66 @@ function initializeEventListeners() {
     // 刷新历史按钮
     refreshHistoryBtn.addEventListener('click', loadHistoryList);
 
+    // 纯语音模式切换
+    voiceOnlyToggle.addEventListener('change', handleVoiceOnlyModeChange);
+
+    // 纯语音模式 - 大按钮录音
+    voiceBigBtn.addEventListener('click', () => {
+        if (isRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    });
+
+    // 纯语音模式 - 文字输入发送
+    voiceTextInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendVoiceTextInput();
+        }
+    });
+    voiceSendBtn.addEventListener('click', sendVoiceTextInput);
+
+    // 显示/隐藏原文
+    toggleTranscriptBtn.addEventListener('click', toggleTranscript);
+
+    // 显示生词本
+    showVocabBtn.addEventListener('click', showVocabModal);
+
+    // 关闭生词本
+    vocabCloseBtn.addEventListener('click', () => {
+        vocabModal.style.display = 'none';
+    });
+
+    // 显示提示
+    showHintBtn.addEventListener('click', showHintModal);
+
+    // 关闭提示
+    hintCloseBtn.addEventListener('click', () => {
+        hintModal.style.display = 'none';
+    });
+
+    // 挑战我按钮
+    challengeMeBtn.addEventListener('click', generateChallenge);
+
+    // 停止播放按钮
+    stopTtsBtn.addEventListener('click', stopTTS);
+    sendStopTtsBtn.addEventListener('click', stopTTS);
+
+    // 点击弹窗外部关闭
+    vocabModal.addEventListener('click', (e) => {
+        if (e.target === vocabModal) {
+            vocabModal.style.display = 'none';
+        }
+    });
+
+    hintModal.addEventListener('click', (e) => {
+        if (e.target === hintModal) {
+            hintModal.style.display = 'none';
+        }
+    });
+
     // 初始化时加载历史记录
     loadHistoryList();
 }
@@ -85,6 +176,9 @@ async function initializeApp() {
     try {
         const mode = modeSelect.value;
         const ieltsPart = ieltsPartSelect.value;
+
+        // 始终显示纯语音模式切换
+        voiceOnlyToggleContainer.style.display = 'block';
 
         const response = await fetch(`${API_BASE}/api/init`, {
             method: 'POST',
@@ -110,7 +204,7 @@ async function initializeApp() {
 async function handleModeChange() {
     const mode = modeSelect.value;
     const ieltsPart = ieltsPartSelect.value;
-    
+
     // 显示/隐藏雅思部分选择器
     if (mode === 'ielts') {
         ieltsPartSelector.style.display = 'block';
@@ -119,9 +213,234 @@ async function handleModeChange() {
         ieltsPartSelector.style.display = 'none';
         getTopicBtn.style.display = 'none';
     }
-    
+
+    // 始终显示纯语音模式切换
+    voiceOnlyToggleContainer.style.display = 'block';
+
     // 重新初始化
     await initializeApp();
+}
+
+// 处理纯语音模式切换
+function handleVoiceOnlyModeChange() {
+    isVoiceOnlyMode = voiceOnlyToggle.checked;
+    
+    if (isVoiceOnlyMode) {
+        // 切换到纯语音视图
+        normalViewContainer.style.display = 'none';
+        voiceOnlyContainer.style.display = 'flex';
+        inputContainer.style.display = 'none';
+        
+        // 如果有话题，显示话题
+        if (currentTopic) {
+            voiceTopicContent.textContent = currentTopic;
+        }
+    } else {
+        // 切换到普通视图
+        normalViewContainer.style.display = 'flex';
+        voiceOnlyContainer.style.display = 'none';
+        inputContainer.style.display = 'flex';
+        voiceTranscriptArea.style.display = 'none';
+    }
+}
+
+// 发送纯语音模式的文字输入
+async function sendVoiceTextInput() {
+    const message = voiceTextInput.value.trim();
+    if (!message) return;
+
+    voiceTextInput.value = '';
+
+    // 禁用输入
+    voiceTextInput.disabled = true;
+    voiceSendBtn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message,
+                session_id: currentSessionId || null,
+                voice_only: isVoiceOnlyMode
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            if (data.session_id) {
+                currentSessionId = data.session_id;
+                loadHistoryList();
+            }
+
+            // 纯语音模式始终播放 TTS
+            playTTS(data.response);
+
+            // 更新原文显示（如果打开）
+            if (voiceTranscriptArea.style.display !== 'none') {
+                updateTranscriptDisplay();
+            }
+        } else {
+            alert(data.error || '发送失败');
+        }
+    } catch (error) {
+        console.error('发送失败:', error);
+        alert('网络错误，请重试');
+    } finally {
+        voiceTextInput.disabled = false;
+        voiceSendBtn.disabled = false;
+        voiceTextInput.focus();
+    }
+}
+
+// 切换原文显示
+function toggleTranscript() {
+    if (voiceTranscriptArea.style.display === 'none') {
+        voiceTranscriptArea.style.display = 'block';
+        toggleTranscriptBtn.textContent = '📝 隐藏原文';
+        updateTranscriptDisplay();
+    } else {
+        voiceTranscriptArea.style.display = 'none';
+        toggleTranscriptBtn.textContent = '📝 显示原文';
+    }
+}
+
+// 更新原文显示
+async function updateTranscriptDisplay() {
+    if (!currentSessionId) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/sessions/${currentSessionId}/transcript`);
+        const data = await response.json();
+        
+        if (data.success && data.messages.length > 0) {
+            // 只显示最近一条 AI 回复
+            const lastAiMessage = [...data.messages].reverse().find(msg => msg.role === 'assistant');
+            
+            if (lastAiMessage) {
+                transcriptContent.innerHTML = `
+                    <div class="transcript-item">
+                        <div class="transcript-role">🤖 AI</div>
+                        <div class="transcript-text">${escapeHtml(lastAiMessage.content)}</div>
+                        ${lastAiMessage.grammar_feedback ? `<div class="grammar-feedback-content" style="margin-top: 8px;">💡 ${escapeHtml(lastAiMessage.grammar_feedback)}</div>` : ''}
+                    </div>
+                `;
+            } else {
+                transcriptContent.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">暂无对话</div>';
+            }
+        }
+    } catch (error) {
+        console.error('获取原文失败:', error);
+    }
+}
+
+// 显示生词本
+async function showVocabModal() {
+    if (!currentSessionId) {
+        vocabModalBody.innerHTML = '<div class="vocab-empty">请先开始对话</div>';
+        vocabModal.style.display = 'flex';
+        return;
+    }
+    
+    vocabModalBody.innerHTML = '<div style="text-align: center; padding: 40px;">加载中...</div>';
+    vocabModal.style.display = 'flex';
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/sessions/${currentSessionId}/vocab`);
+        const data = await response.json();
+        
+        if (data.success && data.vocab && data.vocab.length > 0) {
+            vocabModalBody.innerHTML = data.vocab.map(vocab => `
+                <div class="vocab-item">
+                    <div class="vocab-word">${escapeHtml(vocab.word)}</div>
+                    ${vocab.phonetic ? `<div class="vocab-phonetic">${escapeHtml(vocab.phonetic)}</div>` : ''}
+                    ${vocab.definition ? `<div class="vocab-definition">${escapeHtml(vocab.definition)}</div>` : ''}
+                    ${vocab.example ? `<div class="vocab-example">${escapeHtml(vocab.example)}</div>` : ''}
+                </div>
+            `).join('');
+        } else {
+            vocabModalBody.innerHTML = '<div class="vocab-empty">暂无生词，对话中将自动添加</div>';
+        }
+    } catch (error) {
+        console.error('获取生词失败:', error);
+        vocabModalBody.innerHTML = '<div class="vocab-empty">加载失败</div>';
+    }
+}
+
+// 显示提示
+async function showHintModal() {
+    if (!currentTopic) {
+        hintModalBody.innerHTML = '<div class="hint-empty">请先获取话题</div>';
+        hintModal.style.display = 'flex';
+        return;
+    }
+    
+    hintModalBody.innerHTML = `
+        <div class="hint-item">
+            <div class="hint-title">💡 当前话题提示</div>
+            <div class="hint-content">${escapeHtml(currentTopic)}</div>
+        </div>
+        <div class="hint-item">
+            <div class="hint-title">🎯 口语技巧</div>
+            <div class="hint-content">
+                <p>1. 不要害怕犯错，流利度比准确性更重要</p>
+                <p>2. 使用连接词让回答更连贯（however, furthermore, in addition）</p>
+                <p>3. 尽量扩展答案，不要只回答 yes/no</p>
+                <p>4. 遇到不会的词可以尝试解释或举例</p>
+            </div>
+        </div>
+    `;
+    hintModal.style.display = 'flex';
+}
+
+// 生成挑战问题
+async function generateChallenge() {
+    const difficulties = ['easy', 'medium', 'hard'];
+    const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+    
+    try {
+        const response = await fetch(`${API_BASE}/api/challenge`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                topic: currentTopic || 'General conversation',
+                difficulty: randomDifficulty
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // 在提示弹窗中显示挑战问题
+            hintModalBody.innerHTML = `
+                <div class="hint-item" style="border-left-color: #FF6B6B;">
+                    <div class="hint-title" style="color: #FF6B6B;">🔥 挑战问题</div>
+                    <div class="hint-content" style="font-size: 18px; font-weight: 600; margin: 16px 0;">
+                        ${escapeHtml(data.question)}
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">
+                        难度：${data.difficulty === 'easy' ? '⭐ 简单' : data.difficulty === 'medium' ? '⭐⭐ 中等' : '⭐⭐⭐ 困难'}
+                    </div>
+                </div>
+                <div class="hint-item">
+                    <div class="hint-title">💡 回答建议</div>
+                    <div class="hint-content">
+                        <p>1. 先思考 5-10 秒再回答</p>
+                        <p>2. 尝试给出至少 2-3 个观点</p>
+                        <p>3. 使用具体例子支持你的观点</p>
+                        <p>4. 如果卡住了，可以说 "Let me think about this..."</p>
+                    </div>
+                </div>
+            `;
+            hintModal.style.display = 'flex';
+        } else {
+            alert('生成挑战问题失败：' + (data.error || '未知错误'));
+        }
+    } catch (error) {
+        console.error('生成挑战问题失败:', error);
+        alert('网络错误，请重试');
+    }
 }
 
 // 发送消息
@@ -136,8 +455,10 @@ async function sendMessage() {
     // 禁用发送按钮
     setSendingState(true);
 
-    // 显示用户消息
-    addUserMessage(message);
+    // 显示用户消息（纯语音模式不显示）
+    if (!isVoiceOnlyMode) {
+        addUserMessage(message);
+    }
 
     // 显示 AI 思考状态
     const loadingMessageId = addLoadingMessage();
@@ -152,7 +473,8 @@ async function sendMessage() {
             body: JSON.stringify({
                 message,
                 use_search: useSearch,
-                session_id: currentSessionId || null  // 传递当前会话 ID（可能为 null）
+                session_id: currentSessionId || null,  // 传递当前会话 ID（可能为 null）
+                voice_only: isVoiceOnlyMode
             })
         });
 
@@ -169,11 +491,13 @@ async function sendMessage() {
                 loadHistoryList();
             }
 
-            // 显示 AI 回复（包含语法反馈）
-            addAIMessage(data.response, data.grammar_feedback);
+            // 显示 AI 回复（包含语法反馈）（纯语音模式不显示）
+            if (!isVoiceOnlyMode) {
+                addAIMessage(data.response, data.grammar_feedback);
+            }
 
             // 语音输出
-            if (outputMode === 'both' || outputMode === 'voice') {
+            if (outputMode === 'both') {
                 playTTS(data.response);
             }
         } else {
@@ -287,6 +611,8 @@ function addErrorMessage(text) {
 
 // 显示话题
 function displayTopic(topic) {
+    currentTopic = topic;  // 保存当前话题
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message message-ai';
     messageDiv.innerHTML = `
@@ -302,6 +628,11 @@ function displayTopic(topic) {
     `;
     messagesContainer.appendChild(messageDiv);
     scrollToBottom();
+    
+    // 同时更新纯语音视图中的话题
+    if (voiceTopicContent) {
+        voiceTopicContent.textContent = topic;
+    }
 }
 
 // 获取新话题
@@ -539,6 +870,16 @@ async function startNewChat() {
 
     // 只重置会话 ID，不创建新会话
     currentSessionId = null;
+    
+    // 重置纯语音模式状态
+    isVoiceOnlyMode = false;
+    voiceOnlyToggle.checked = false;
+    normalViewContainer.style.display = 'flex';
+    voiceOnlyContainer.style.display = 'none';
+    inputContainer.style.display = 'flex';
+    voiceTranscriptArea.style.display = 'none';
+    toggleTranscriptBtn.textContent = '📝 显示原文';
+    currentTopic = '';
 
     // 清空消息显示
     messagesContainer.innerHTML = `
@@ -619,61 +960,68 @@ function stopRecording() {
 }
 
 async function sendVoiceMessage(audioBlob) {
-    // 显示录音成功消息
-    addUserMessage('🎤 [语音消息]');
-    
+    // 显示录音成功消息（纯语音模式不显示）
+    if (!isVoiceOnlyMode) {
+        addUserMessage('🎤 [语音消息]');
+    }
+
     // 显示 AI 思考状态
     const loadingMessageId = addLoadingMessage();
-    
+
     try {
         const formData = new FormData();
         formData.append('audio', audioBlob, 'recording.wav');
-        
+
         // 语音识别
         const transcribeResponse = await fetch(`${API_BASE}/api/transcribe`, {
             method: 'POST',
             body: formData
         });
-        
+
         const transcribeData = await transcribeResponse.json();
-        
+
         if (!transcribeData.success) {
             throw new Error('语音识别失败');
         }
-        
+
         const text = transcribeData.text;
-        
-        // 更新用户消息为识别的文字
-        const lastUserMessage = messagesContainer.querySelector('.message-user:last-child');
-        if (lastUserMessage) {
-            lastUserMessage.querySelector('.message-text').innerHTML = `<p>${escapeHtml(text)}</p>`;
+
+        // 更新用户消息为识别的文字（纯语音模式不显示）
+        if (!isVoiceOnlyMode) {
+            const lastUserMessage = messagesContainer.querySelector('.message-user:last-child');
+            if (lastUserMessage) {
+                lastUserMessage.querySelector('.message-text').innerHTML = `<p>${escapeHtml(text)}</p>`;
+            }
         }
-        
+
         // 发送文字聊天
-        const outputMode = outputModeSelect.value;
-        
         const chatResponse = await fetch(`${API_BASE}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text })
+            body: JSON.stringify({
+                message: text,
+                voice_only: isVoiceOnlyMode
+            })
         });
-        
+
         const chatData = await chatResponse.json();
-        
+
         // 移除加载消息
         removeMessage(loadingMessageId);
-        
+
         if (chatData.success) {
-            // 显示 AI 回复
-            addAIMessage(chatData.response);
-            
-            // 显示语法反馈
-            if (chatData.grammar_feedback) {
-                showGrammarFeedback(chatData.grammar_feedback);
+            // 显示 AI 回复（纯语音模式不显示）
+            if (!isVoiceOnlyMode) {
+                addAIMessage(chatData.response);
+
+                // 显示语法反馈
+                if (chatData.grammar_feedback) {
+                    showGrammarFeedback(chatData.grammar_feedback);
+                }
             }
-            
-            // 语音输出
-            if (outputMode === 'both' || outputMode === 'voice') {
+
+            // 纯语音模式始终播放 TTS，普通模式根据设置播放
+            if (isVoiceOnlyMode || outputModeSelect.value === 'both') {
                 playTTS(chatData.response);
             }
         } else {
@@ -688,22 +1036,62 @@ async function sendVoiceMessage(audioBlob) {
 
 // 播放 TTS
 async function playTTS(text) {
+    // 停止当前播放
+    stopTTS();
+    
+    // 显示停止按钮
+    if (isVoiceOnlyMode) {
+        stopTtsBtn.style.display = 'block';
+    } else {
+        sendStopTtsBtn.style.display = 'flex';
+    }
+    
     try {
         const response = await fetch(`${API_BASE}/api/tts`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text })
         });
-        
+
         const data = await response.json();
 
         if (data.success && data.audio_url) {
-            const audio = new Audio(data.audio_url);
-            audio.play();
+            currentAudio = new Audio(data.audio_url);
+            
+            // 播放结束后清除引用并隐藏停止按钮
+            currentAudio.onended = () => {
+                currentAudio = null;
+                stopTtsBtn.style.display = 'none';
+                sendStopTtsBtn.style.display = 'none';
+            };
+            
+            // 播放出错时隐藏停止按钮
+            currentAudio.onerror = () => {
+                currentAudio = null;
+                stopTtsBtn.style.display = 'none';
+                sendStopTtsBtn.style.display = 'none';
+            };
+            
+            currentAudio.play();
         }
     } catch (error) {
         console.error('TTS 播放失败:', error);
+        stopTtsBtn.style.display = 'none';
+        sendStopTtsBtn.style.display = 'none';
     }
+}
+
+// 停止 TTS 播放
+function stopTTS() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
+    
+    // 隐藏停止按钮
+    stopTtsBtn.style.display = 'none';
+    sendStopTtsBtn.style.display = 'none';
 }
 
 // 设置发送状态

@@ -77,10 +77,25 @@ class Database:
                     content TEXT NOT NULL,
                     grammar_feedback TEXT,
                     search_used BOOLEAN DEFAULT FALSE,
+                    display BOOLEAN DEFAULT TRUE,
+                    vocab_data TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
                 )
             """)
+
+            # 检查并添加缺失的列（用于数据库迁移）
+            try:
+                cursor.execute("ALTER TABLE messages ADD COLUMN display BOOLEAN DEFAULT TRUE")
+                print("✅ 已添加 display 列到 messages 表")
+            except:
+                pass  # 列已存在
+
+            try:
+                cursor.execute("ALTER TABLE messages ADD COLUMN vocab_data TEXT")
+                print("✅ 已添加 vocab_data 列到 messages 表")
+            except:
+                pass  # 列已存在
 
             # 创建索引
             cursor.execute("""
@@ -199,7 +214,8 @@ class Database:
             return cursor.rowcount > 0
 
     def add_message(self, session_id: int, role: str, content: str,
-                    grammar_feedback: str = None, search_used: bool = False) -> int:
+                    grammar_feedback: str = None, search_used: bool = False,
+                    display: bool = True, vocab_data: str = None) -> int:
         """
         添加消息
 
@@ -209,6 +225,8 @@ class Database:
             content: 消息内容
             grammar_feedback: 语法反馈
             search_used: 是否使用了搜索
+            display: 是否在前端显示（纯语音模式时用户消息可不显示）
+            vocab_data: 生词数据（JSON 格式）
 
         Returns:
             消息 ID
@@ -216,9 +234,9 @@ class Database:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO messages (session_id, role, content, grammar_feedback, search_used)
-                VALUES (?, ?, ?, ?, ?)
-            """, (session_id, role, content, grammar_feedback, search_used))
+                INSERT INTO messages (session_id, role, content, grammar_feedback, search_used, display, vocab_data)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (session_id, role, content, grammar_feedback, search_used, display, vocab_data))
 
             # 更新会话的更新时间
             self.update_session(session_id)
@@ -331,6 +349,47 @@ class Database:
                 "total_sessions": session_count,
                 "total_messages": message_count
             }
+
+    def get_session_vocab(self, session_id: int, limit: int = 50) -> List[Dict]:
+        """
+        获取会话中的生词列表
+
+        Args:
+            session_id: 会话 ID
+            limit: 限制数量
+
+        Returns:
+            生词列表
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT vocab_data, created_at FROM messages
+                WHERE session_id = ? AND vocab_data IS NOT NULL AND vocab_data != ''
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (session_id, limit))
+            
+            vocab_list = []
+            for row in cursor.fetchall():
+                if row["vocab_data"]:
+                    try:
+                        vocab_items = json.loads(row["vocab_data"])
+                        if isinstance(vocab_items, list):
+                            vocab_list.extend(vocab_items)
+                    except:
+                        pass
+            
+            # 去重（根据单词）
+            seen = set()
+            unique_vocab = []
+            for item in vocab_list:
+                word = item.get("word", "").lower()
+                if word and word not in seen:
+                    seen.add(word)
+                    unique_vocab.append(item)
+            
+            return unique_vocab
 
 
 # 全局数据库实例

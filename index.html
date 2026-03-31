@@ -55,8 +55,14 @@
                     <select id="outputModeSelect">
                         <option value="both">🔊 文字 + 语音</option>
                         <option value="text">📝 仅文字</option>
-                        <option value="voice">🎧 仅语音</option>
                     </select>
+                </div>
+
+                <div class="voice-only-toggle" id="voiceOnlyToggleContainer" style="display: none;">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="voiceOnlyToggle">
+                        <span>🎧 纯语音模式</span>
+                    </label>
                 </div>
                 
                 <div class="sidebar-actions">
@@ -76,38 +82,94 @@
         
         <!-- 主聊天区域 -->
         <main class="chat-container">
-            <!-- 消息列表 -->
-            <div class="messages-container" id="messagesContainer">
-                <div class="welcome-message">
-                    <h2>🎓 欢迎来到 DAMN</h2>
-                    <p>你的雅思口语练习伙伴</p>
-                    <div class="features">
-                        <div class="feature-item">
-                            <span class="feature-icon">🎤</span>
-                            <span>语音输入</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">🔊</span>
-                            <span>语音输出</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">📚</span>
-                            <span>雅思话题</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">🔍</span>
-                            <span>联网搜索</span>
-                        </div>
-                        <div class="feature-item">
-                            <span class="feature-icon">💡</span>
-                            <span>语法纠正</span>
+            <!-- 普通模式视图 -->
+            <div class="normal-view-container" id="normalViewContainer">
+                <!-- 消息列表 -->
+                <div class="messages-container" id="messagesContainer">
+                    <div class="welcome-message">
+                        <h2>🎓 欢迎来到 DAMN</h2>
+                        <p>你的雅思口语练习伙伴</p>
+                        <div class="features">
+                            <div class="feature-item">
+                                <span class="feature-icon">🎤</span>
+                                <span>语音输入</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🔊</span>
+                                <span>语音输出</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">📚</span>
+                                <span>雅思话题</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🔍</span>
+                                <span>联网搜索</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">💡</span>
+                                <span>语法纠正</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- 输入区域 -->
-            <div class="input-container">
+
+            <!-- 纯语音模式视图 -->
+            <div class="voice-only-container" id="voiceOnlyContainer" style="display: none;">
+                <div class="voice-only-content">
+                    <div class="voice-topic-display" id="voiceTopicDisplay">
+                        <div class="voice-topic-title">当前话题</div>
+                        <div class="voice-topic-content" id="voiceTopicContent">
+                            <!-- 动态加载话题 -->
+                        </div>
+                    </div>
+
+                    <div class="voice-input-area">
+                        <button class="voice-big-btn" id="voiceBigBtn">
+                            <svg class="big-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="23"/>
+                                <line x1="8" y1="23" x2="16" y2="23"/>
+                            </svg>
+                            <span>点击说话</span>
+                        </button>
+                        <div class="voice-text-input">
+                            <input type="text" id="voiceTextInput" placeholder="输入文字...">
+                            <button class="voice-send-btn" id="voiceSendBtn">发送</button>
+                        </div>
+                    </div>
+
+                    <div class="voice-actions">
+                        <button class="voice-action-btn" id="showHintBtn" title="显示提示">
+                            💡 提示
+                        </button>
+                        <button class="voice-action-btn" id="toggleTranscriptBtn" title="显示/隐藏原文">
+                            📝 显示原文
+                        </button>
+                        <button class="voice-action-btn" id="showVocabBtn" title="查看生词">
+                            📖 生词本
+                        </button>
+                        <button class="voice-action-btn" id="challengeMeBtn" title="生成挑战问题">
+                            🔥 挑战我
+                        </button>
+                        <button class="voice-action-btn" id="stopTtsBtn" title="停止播放" style="display: none; background-color: var(--danger-color); margin-left: auto;">
+                            ⏹️ 停止
+                        </button>
+                    </div>
+
+                    <!-- 原文显示区域 -->
+                    <div class="voice-transcript-area" id="voiceTranscriptArea" style="display: none;">
+                        <div class="transcript-content" id="transcriptContent">
+                            <!-- 动态加载对话原文 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 输入区域（两种模式共用） -->
+            <div class="input-container" id="inputContainer">
                 <div class="input-box">
                     <textarea
                         id="messageInput"
@@ -128,6 +190,9 @@
                                 <line x1="22" y1="2" x2="11" y2="13"/>
                                 <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                             </svg>
+                        </button>
+                        <button class="stop-tts-btn" id="sendStopTtsBtn" title="停止播放" style="display: none;">
+                            ⏹️
                         </button>
                     </div>
                 </div>
@@ -151,6 +216,32 @@
             <h3>正在录音...</h3>
             <p>说完后等待 3 秒自动停止，或点击停止按钮</p>
             <button class="stop-recording-btn" id="stopRecordingBtn">停止录音</button>
+        </div>
+    </div>
+
+    <!-- 生词本弹窗 -->
+    <div class="vocab-modal" id="vocabModal" style="display: none;">
+        <div class="vocab-modal-content">
+            <div class="vocab-modal-header">
+                <h3>📖 生词本</h3>
+                <button class="vocab-close-btn" id="vocabCloseBtn">×</button>
+            </div>
+            <div class="vocab-modal-body" id="vocabModalBody">
+                <div class="vocab-empty">暂无生词，对话中将自动添加</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示弹窗 -->
+    <div class="hint-modal" id="hintModal" style="display: none;">
+        <div class="hint-modal-content">
+            <div class="hint-modal-header">
+                <h3>💡 提示</h3>
+                <button class="hint-close-btn" id="hintCloseBtn">×</button>
+            </div>
+            <div class="hint-modal-body" id="hintModalBody">
+                <!-- 动态加载提示内容 -->
+            </div>
         </div>
     </div>
 

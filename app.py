@@ -102,6 +102,7 @@ def chat():
     message = data.get('message', '')
     use_search = data.get('use_search', None)
     session_id = data.get('session_id')  # 前端传递的 session_id
+    voice_only = data.get('voice_only', False)  # 纯语音模式标记
 
     if not message:
         return jsonify({'error': '消息不能为空'}), 400
@@ -125,9 +126,19 @@ def chat():
 
     response, grammar_feedback = bot.chat(message, use_search=use_search)
 
+    # 提取生词（从 AI 回复中）
+    vocab_data = None
+    try:
+        vocab_list = bot.extract_vocab(response, max_words=3)
+        if vocab_list:
+            import json
+            vocab_data = json.dumps(vocab_list, ensure_ascii=False)
+    except Exception as e:
+        print(f"⚠️ 提取生词失败：{e}")
+
     # 保存到数据库
-    db.add_message(session_id, 'user', message)
-    db.add_message(session_id, 'assistant', response, grammar_feedback)
+    db.add_message(session_id, 'user', message, display=not voice_only)
+    db.add_message(session_id, 'assistant', response, grammar_feedback, vocab_data=vocab_data)
 
     return jsonify({
         'success': True,
@@ -242,6 +253,49 @@ def get_topic():
     })
 
 
+@app.route('/api/challenge', methods=['POST'])
+def generate_challenge():
+    """生成口语考验问题"""
+    data = request.json
+    topic = data.get('topic', '')
+    difficulty = data.get('difficulty', 'medium')  # easy, medium, hard
+
+    # 根据难度和话题生成挑战性问题
+    difficulty_prompts = {
+        'easy': "Ask a simple follow-up question that requires a 2-3 sentence answer.",
+        'medium': "Ask a thought-provoking question that requires reasoning and examples.",
+        'hard': "Ask a complex hypothetical or abstract question that challenges critical thinking."
+    }
+
+    prompt = f"""You are an IELTS speaking examiner. Generate a challenging speaking question for the user.
+
+Topic: {topic if topic else 'General conversation'}
+Difficulty: {difficulty}
+
+{difficulty_prompts.get(difficulty, difficulty_prompts['medium'])}
+
+The question should:
+- Be open-ended (cannot be answered with yes/no)
+- Encourage the user to speak for 1-2 minutes
+- Use natural, conversational English
+- Be appropriate for IELTS Speaking Part 3 level
+
+Only output the question, nothing else."""
+
+    try:
+        from llm import GLMClient
+        messages = [{"role": "user", "content": prompt}]
+        challenge_question = bot.llm.chat(messages, temperature=0.8, max_tokens=200)
+        
+        return jsonify({
+            'success': True,
+            'question': challenge_question.strip(),
+            'difficulty': difficulty
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # ==================== 数据库 API ====================
 
 @app.route('/api/sessions', methods=['GET'])
@@ -301,12 +355,53 @@ def load_session():
 
     current_session_id = session_id
 
-    # 获取消息
+    # 获取消息（默认只显示 display=True 的消息）
     messages = db.get_messages(session_id)
 
     return jsonify({
         'success': True,
         'session': session,
+        'messages': messages
+    })
+
+
+@app.route('/api/sessions/<int:session_id>/vocab', methods=['GET'])
+def get_session_vocab(session_id):
+    """获取会话生词本"""
+    session = db.get_session(session_id)
+    if not session:
+        return jsonify({'error': '会话不存在'}), 404
+
+    vocab_list = db.get_session_vocab(session_id)
+    return jsonify({
+        'success': True,
+        'vocab': vocab_list
+    })
+
+
+@app.route('/api/sessions/<int:session_id>/transcript', methods=['GET'])
+def get_session_transcript(session_id):
+    """获取会话原文（所有消息，包括隐藏的）"""
+    session = db.get_session(session_id)
+    if not session:
+        return jsonify({'error': '会话不存在'}), 404
+
+    # 获取所有消息，包括隐藏的
+    from db.db import get_database
+    db_instance = get_database()
+    
+    with db_instance.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, role, content, grammar_feedback, created_at 
+            FROM messages 
+            WHERE session_id = ? 
+            ORDER BY created_at ASC
+        """, (session_id,))
+        messages = [dict(row) for row in cursor.fetchall()]
+
+    return jsonify({
+        'success': True,
         'messages': messages
     })
 

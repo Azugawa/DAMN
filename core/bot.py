@@ -130,11 +130,11 @@ class SpeakingBot:
     def chat(self, text: str, use_search: bool = None) -> Tuple[str, Optional[str]]:
         """
         文字聊天
-        
+
         Args:
             text: 用户输入文字
             use_search: 是否强制使用搜索 (None 表示自动判断)
-        
+
         Returns:
             (AI 回复，语法反馈)
         """
@@ -155,7 +155,7 @@ class SpeakingBot:
         search_results = None
         if need_search and search_query:
             search_results = self._do_search(search_query)
-        
+
         # 构建消息
         if search_results:
             # 整合搜索结果
@@ -174,28 +174,76 @@ class SpeakingBot:
                 *self.history,
                 {"role": "user", "content": text}
             ]
-        
+
         # 调用 LLM
         response = self.llm.chat(
             messages,
             temperature=LLM_CONFIG["temperature"],
             max_tokens=LLM_CONFIG["max_tokens"]
         )
-        
+
         # 更新历史
         self.history.append({"role": "user", "content": text})
         self.history.append({"role": "assistant", "content": response})
-        
+
         # 限制历史长度
         if len(self.history) > 20:
             self.history = self.history[-20:]
-        
+
         # 语法反馈（可选）
         grammar_feedback = None
         if len(text) > 10:  # 短句不反馈
             grammar_feedback = self._check_grammar(text)
-        
+
         return response, grammar_feedback
+
+    def extract_vocab(self, text: str, max_words: int = 5) -> List[Dict]:
+        """
+        从文本中提取生词/关键词
+
+        Args:
+            text: 要分析的文本
+            max_words: 最多提取的单词数
+
+        Returns:
+            生词列表，每个生词包含 word, phonetic, definition, example
+        """
+        try:
+            # 使用 LLM 提取生词
+            prompt = f"""Extract {max_words} useful English vocabulary words from the following text that might be challenging for an IELTS student.
+
+Text: "{text}"
+
+For each word, provide:
+- word: the word itself
+- phonetic: pronunciation in IPA format (if you know it, otherwise skip)
+- definition: brief English definition
+- example: a short example sentence
+
+Return the result as a JSON array format:
+[
+    {{"word": "example", "phonetic": "/ɪɡˈzæmpəl/", "definition": "a thing characteristic of its kind", "example": "This is a good example of the genre."}},
+    ...
+]
+
+Only return the JSON array, nothing else.
+"""
+            messages = [{"role": "user", "content": prompt}]
+            result = self.llm.chat(messages, temperature=0.3, max_tokens=500)
+            
+            # 尝试解析 JSON
+            import json
+            import re
+            
+            # 提取 JSON 部分
+            json_match = re.search(r'\[.*\]', result, re.DOTALL)
+            if json_match:
+                vocab_list = json.loads(json_match.group())
+                return vocab_list
+            return []
+        except Exception as e:
+            print(f"⚠️ 提取生词失败：{e}")
+            return []
     
     def _check_grammar(self, text: str) -> Optional[str]:
         """检查语法并提供反馈"""

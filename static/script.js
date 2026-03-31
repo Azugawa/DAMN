@@ -322,8 +322,8 @@ async function updateTranscriptDisplay() {
                 transcriptContent.innerHTML = `
                     <div class="transcript-item">
                         <div class="transcript-role">🤖 AI</div>
-                        <div class="transcript-text">${escapeHtml(lastAiMessage.content)}</div>
-                        ${lastAiMessage.grammar_feedback ? `<div class="grammar-feedback-content" style="margin-top: 8px;">💡 ${escapeHtml(lastAiMessage.grammar_feedback)}</div>` : ''}
+                        <div class="transcript-text">${formatMessage(lastAiMessage.content)}</div>
+                        ${lastAiMessage.grammar_feedback ? formatGrammarFeedback(lastAiMessage.grammar_feedback) : ''}
                     </div>
                 `;
             } else {
@@ -333,6 +333,104 @@ async function updateTranscriptDisplay() {
     } catch (error) {
         console.error('获取原文失败:', error);
     }
+}
+
+// 格式化语法反馈
+function formatGrammarFeedback(feedback) {
+    // 解析反馈的各个部分
+    const sections = {
+        natural: '',
+        issues: '',
+        tips: ''
+    };
+    
+    // 提取 More Natural Expression 部分
+    const naturalMatch = feedback.match(/\*\*1\. More Natural Expression:\*\*\s*([\s\S]*?)(?=\*\*2\.|\*\*3\.|$)/);
+    if (naturalMatch) {
+        sections.natural = naturalMatch[1].trim();
+    }
+    
+    // 提取 Grammar & Vocabulary Issues 部分
+    const issuesMatch = feedback.match(/\*\*2\. Grammar & Vocabulary Issues:\*\*\s*([\s\S]*?)(?=\*\*3\.|$)/);
+    if (issuesMatch) {
+        sections.issues = issuesMatch[1].trim();
+    }
+    
+    // 提取 Tips for Expanding Your Answer 部分
+    const tipsMatch = feedback.match(/\*\*3\. Tips for Expanding Your Answer:\*\*\s*([\s\S]*?)$/);
+    if (tipsMatch) {
+        sections.tips = tipsMatch[1].trim();
+    }
+    
+    // 格式化输出
+    let html = '<div class="grammar-feedback-content" style="margin-top: 12px;">';
+    
+    if (sections.natural) {
+        html += `
+            <div style="margin-bottom: 16px;">
+                <div style="font-weight: 600; color: var(--accent-color); margin-bottom: 8px;">💡 更地道的表达</div>
+                <div style="background: rgba(16, 163, 127, 0.1); padding: 12px; border-radius: 6px; border-left: 3px solid var(--accent-color);">
+                    ${sections.natural.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}
+                </div>
+            </div>
+        `;
+    }
+    
+    if (sections.issues) {
+        const issueLines = sections.issues.split('\n').filter(line => line.trim());
+        html += `
+            <div style="margin-bottom: 16px;">
+                <div style="font-weight: 600; color: #FFB74D; margin-bottom: 8px;">📝 语法与词汇建议</div>
+                <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                    ${issueLines.map(line => {
+                        const cleaned = line.replace(/^- \*\*(.+?)\*\*/, '<strong>$1</strong>');
+                        return `<li style="color: var(--text-secondary);">${cleaned.replace(/\*\*(.+?)\*\*/g, '<strong style="color: var(--text-primary);">$1</strong>')}</li>`;
+                    }).join('')}
+                </ul>
+            </div>
+        `;
+    }
+    
+    if (sections.tips) {
+        // 解析 tips 中的各个小点
+        const tipLines = sections.tips.split('\n').filter(line => line.trim());
+        let currentTip = null;
+        let currentTipContent = [];
+        const tips = [];
+        
+        for (const line of tipLines) {
+            const tipTitleMatch = line.match(/^- \*\*(.+?):\*\*/);
+            if (tipTitleMatch) {
+                if (currentTip) {
+                    tips.push({ title: currentTip, content: currentTipContent.join(' ') });
+                }
+                currentTip = tipTitleMatch[1];
+                currentTipContent = [];
+            } else if (currentTip && line.trim()) {
+                currentTipContent.push(line.replace(/^- /, ''));
+            }
+        }
+        if (currentTip) {
+            tips.push({ title: currentTip, content: currentTipContent.join(' ') });
+        }
+        
+        html += `
+            <div>
+                <div style="font-weight: 600; color: #BA68C8; margin-bottom: 8px;">🎯 话题扩展建议</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    ${tips.map(tip => `
+                        <div style="background: rgba(186, 104, 200, 0.1); padding: 10px 14px; border-radius: 6px; border-left: 3px solid #BA68C8; flex: 1 1 200px;">
+                            <div style="font-weight: 600; color: #BA68C8; margin-bottom: 4px; font-size: 13px;">${tip.title}</div>
+                            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">${tip.content}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    return html;
 }
 
 // 显示生词本
@@ -535,16 +633,13 @@ function addAIMessage(text, grammarFeedback) {
 
     // 处理文本中的换行和格式
     const formattedText = formatMessage(text);
-    
+
     // 如果有语法反馈，添加到消息内部
     let grammarHtml = '';
     if (grammarFeedback) {
         grammarHtml = `
             <div class="grammar-feedback">
-                <div class="grammar-feedback-content">
-                    <div class="grammar-feedback-title">💡 语法建议</div>
-                    <div>${formatMessage(grammarFeedback)}</div>
-                </div>
+                ${formatGrammarFeedback(grammarFeedback)}
             </div>
         `;
     }
@@ -1012,12 +1107,7 @@ async function sendVoiceMessage(audioBlob) {
         if (chatData.success) {
             // 显示 AI 回复（纯语音模式不显示）
             if (!isVoiceOnlyMode) {
-                addAIMessage(chatData.response);
-
-                // 显示语法反馈
-                if (chatData.grammar_feedback) {
-                    showGrammarFeedback(chatData.grammar_feedback);
-                }
+                addAIMessage(chatData.response, chatData.grammar_feedback);
             }
 
             // 纯语音模式始终播放 TTS，普通模式根据设置播放
@@ -1046,11 +1136,14 @@ async function playTTS(text) {
         sendStopTtsBtn.style.display = 'flex';
     }
     
+    // 清理 emoji 和特殊字符
+    const cleanText = removeEmoji(text);
+    
     try {
         const response = await fetch(`${API_BASE}/api/tts`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text })
+            body: JSON.stringify({ text: cleanText })
         });
 
         const data = await response.json();
@@ -1079,6 +1172,18 @@ async function playTTS(text) {
         stopTtsBtn.style.display = 'none';
         sendStopTtsBtn.style.display = 'none';
     }
+}
+
+// 清理 emoji 和特殊字符
+function removeEmoji(text) {
+    return text
+        // 移除 emoji
+        .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+        // 移除多余的换行和空格
+        .replace(/\n\s*\n/g, '\n')
+        // 移除特殊符号（保留基本标点）
+        .replace(/[*#`]/g, '')
+        .trim();
 }
 
 // 停止 TTS 播放

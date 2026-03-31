@@ -112,16 +112,36 @@ Then continue the conversation naturally with a challenging question.
 """
 
 # ==================== 语法纠正 Prompt ====================
-GRAMMAR_CHECK_PROMPT = """Please analyze the following English text for grammar issues:
+GRAMMAR_CHECK_PROMPT = """Please analyze the following English text (may contain some Chinese words) for grammar issues and provide helpful feedback for an IELTS speaking student:
 
 Text: "{text}"
 
-Provide:
-1. List any grammar/vocabulary issues (if any)
-2. Suggest a more natural way to express it (if applicable)
-3. Keep feedback brief and encouraging
+**Important Guidelines:**
+1. **Understand the meaning first**: Read the entire text to understand what the student is trying to express, even if some words are used incorrectly.
+2. **Chinese words**: The student may use Chinese when they don't know the English word. Provide the English translation as a vocabulary suggestion - do NOT treat this as an error.
+3. **Wrong word usage**: If a word seems misused, try to understand what they meant and correct it in the "More Natural Expression" section.
+4. **Be encouraging**: Focus on communication effectiveness, not just grammatical perfection.
 
-Format your response concisely.
+Provide feedback in this format:
+
+**1. More Natural Expression:**
+First understand the intended meaning, then rewrite the ENTIRE text in a natural, fluent way that an IELTS band 7+ speaker would use. Correct any misused words based on context. If there are Chinese words, provide their English translation in parentheses. Keep it conversational but polished.
+
+**2. Grammar & Vocabulary Issues:**
+- List 2-3 specific grammar/vocabulary errors with brief explanations
+- For Chinese words, simply provide the English translation (don't treat as errors)
+- If a word was misused, explain what the correct word should be and why
+- Be encouraging and focus on the most important issues
+
+**3. Tips for Expanding Your Answer:**
+Suggest 2-3 specific aspects or angles the student could elaborate on to make their answer richer and longer. For example:
+- Personal examples or experiences
+- Comparisons (past vs present, pros vs cons)  
+- Reasons and consequences
+- Feelings and opinions
+- Future plans or predictions
+
+Keep feedback concise, supportive, and practical.
 """
 
 # ==================== 搜索相关 Prompt ====================

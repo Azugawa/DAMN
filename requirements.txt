@@ -25,3 +25,7 @@ pygame>=2.5.0
 # 其他
 aiofiles>=23.0.0
 huggingface_hub>=0.20.0
+
+# Web 前端
+flask>=3.0.0
+flask-cors>=4.0.0

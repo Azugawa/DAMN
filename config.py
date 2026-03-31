@@ -13,6 +13,7 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 TOPICS_DIR = os.path.join(DATA_DIR, "topics")
 HISTORY_DIR = os.path.join(DATA_DIR, "history")
 TMP_DIR = os.path.join(BASE_DIR, "tmp")
+DB_PATH = os.path.join(DATA_DIR, "damn.db")
 
 # 确保目录存在
 for dir_path in [DATA_DIR, TOPICS_DIR, HISTORY_DIR, TMP_DIR]:
@@ -50,7 +51,7 @@ AUDIO_CONFIG = {
 
 # ==================== Whisper 配置 ====================
 WHISPER_CONFIG = {
-    "model": "D:\desktop\ielts_speaking_buddy\models\whisper",  # tiny, base, small, medium, large
+    "model": "D:\desktop\DAMN\models\whisper",  # tiny, base, small, medium, large
     "device": "auto",  # auto, cpu, cuda
     "compute_type": "float16",  # float16, int8, int8_float16
 }

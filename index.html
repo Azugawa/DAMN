@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAMN - IELTS Speaking Assistant</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>🎓 DAMN</h1>
+                <p class="subtitle">IELTS Speaking Assistant</p>
+            </div>
+            
+            <div class="sidebar-content">
+                <button class="new-chat-btn" id="newChatBtn">
+                    <span>+</span> 新对话
+                </button>
+                
+                <!-- 历史记录列表 -->
+                <div class="history-section">
+                    <div class="history-header">
+                        <label>历史记录</label>
+                        <button class="refresh-btn" id="refreshHistoryBtn" title="刷新">
+                            🔄
+                        </button>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <!-- 动态加载历史记录 -->
+                    </div>
+                </div>
+                
+                <div class="mode-selector">
+                    <label>对话模式</label>
+                    <select id="modeSelect">
+                        <option value="free">💬 自由聊天</option>
+                        <option value="ielts">📚 雅思话题</option>
+                    </select>
+                </div>
+                
+                <div class="ielts-part-selector" id="ieltsPartSelector" style="display: none;">
+                    <label>雅思部分</label>
+                    <select id="ieltsPartSelect">
+                        <option value="1">Part 1 - 简介与问答</option>
+                        <option value="2">Part 2 - 个人陈述</option>
+                        <option value="3">Part 3 - 深入讨论</option>
+                    </select>
+                </div>
+                
+                <div class="output-mode-selector">
+                    <label>输出方式</label>
+                    <select id="outputModeSelect">
+                        <option value="both">🔊 文字 + 语音</option>
+                        <option value="text">📝 仅文字</option>
+                        <option value="voice">🎧 仅语音</option>
+                    </select>
+                </div>
+                
+                <div class="sidebar-actions">
+                    <button class="action-btn" id="getTopicBtn" style="display: none;">
+                        📝 获取新话题
+                    </button>
+                    <button class="action-btn" id="clearHistoryBtn">
+                        🗑️ 清空历史
+                    </button>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <p>Daily Assistant for Mastering Native</p>
+            </div>
+        </aside>
+        
+        <!-- 主聊天区域 -->
+        <main class="chat-container">
+            <!-- 消息列表 -->
+            <div class="messages-container" id="messagesContainer">
+                <div class="welcome-message">
+                    <h2>🎓 欢迎来到 DAMN</h2>
+                    <p>你的雅思口语练习伙伴</p>
+                    <div class="features">
+                        <div class="feature-item">
+                            <span class="feature-icon">🎤</span>
+                            <span>语音输入</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🔊</span>
+                            <span>语音输出</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">📚</span>
+                            <span>雅思话题</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">🔍</span>
+                            <span>联网搜索</span>
+                        </div>
+                        <div class="feature-item">
+                            <span class="feature-icon">💡</span>
+                            <span>语法纠正</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 输入区域 -->
+            <div class="input-container">
+                <div class="input-box">
+                    <textarea
+                        id="messageInput"
+                        placeholder="发送消息..."
+                        rows="1"
+                    ></textarea>
+                    <div class="input-actions">
+                        <button class="voice-btn" id="voiceBtn" title="语音输入">
+                            <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="23"/>
+                                <line x1="8" y1="23" x2="16" y2="23"/>
+                            </svg>
+                        </button>
+                        <button class="send-btn" id="sendBtn" title="发送">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-hint">
+                    <p>按 Enter 发送，Shift+Enter 换行 | 支持自动搜索最新信息</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 录音弹窗 -->
+    <div class="recording-modal" id="recordingModal" style="display: none;">
+        <div class="modal-content">
+            <div class="recording-indicator">
+                <div class="pulse-ring"></div>
+                <svg class="recording-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                </svg>
+            </div>
+            <h3>正在录音...</h3>
+            <p>说完后等待 3 秒自动停止，或点击停止按钮</p>
+            <button class="stop-recording-btn" id="stopRecordingBtn">停止录音</button>
+        </div>
+    </div>
+
+    <script src="/script.js"></script>
+</body>
+</html>

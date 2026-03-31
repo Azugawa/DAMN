@@ -34,7 +34,9 @@ A: 因为这是一个**正经**的缩写：
 
 ```
 ielts_speaking_buddy/
-├── main.py                 # 主程序入口
+├── main.py                 # 主程序入口 (CLI 版本)
+├── app.py                  # Web API 服务器
+├── index.html              # Web 前端页面
 ├── config.py               # 配置文件
 ├── requirements.txt        # 依赖列表
 ├── .env.example           # 环境变量模板
@@ -58,6 +60,10 @@ ielts_speaking_buddy/
 │
 ├── utils/
 │   └── audio_player.py    # 音频播放
+│
+├── static/                # Web 前端资源
+│   ├── style.css          # 样式文件
+│   └── script.js          # 前端逻辑
 │
 └── data/
     ├── topics/            # 雅思话题库
@@ -100,9 +106,35 @@ python download_whisper.py
 
 ### 4. 运行程序
 
+**方式一：命令行版本**
 ```bash
 python main.py
 ```
+
+**方式二：Web 版本（推荐）**
+```bash
+python app.py
+```
+
+然后访问：http://localhost:5000
+
+## 🌐 Web 前端
+
+Web 版本采用 **ChatGPT 风格**的简洁界面，提供以下功能：
+
+- 💬 **实时对话** - 类似 ChatGPT 的对话体验
+- 🎤 **语音输入** - 点击麦克风按钮即可录音
+- 🔊 **语音输出** - AI 回复自动朗读（可选）
+- 📚 **雅思模式** - 选择 Part 1/2/3 进行专项练习
+- 💡 **语法反馈** - 实时显示语法建议
+- 🔍 **智能搜索** - 自动检测需要搜索的问题
+
+### Web 版快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| Enter | 发送消息 |
+| Shift+Enter | 换行 |
 
 ## 📖 使用说明
 

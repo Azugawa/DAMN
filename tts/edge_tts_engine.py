@@ -46,23 +46,60 @@ class EdgeTTSEngine:
             print(f"❌ TTS 生成失败：{e}")
             return False
     
+    def _clean_text_for_tts(self, text: str) -> str:
+        """
+        清理文本，移除 emoji 和特殊符号（TTS 不需要读的）
+        
+        Args:
+            text: 原始文本
+            
+        Returns:
+            清理后的文本
+        """
+        import re
+        
+        # 移除常见 emoji
+        emoji_pattern = re.compile(
+            "["
+            "\U0001F600-\U0001F64F"  # 表情符号
+            "\U0001F300-\U0001F5FF"  # 符号和象形文字
+            "\U0001F680-\U0001F6FF"  # 交通和地图符号
+            "\U0001F1E0-\U0001F1FF"  # 旗帜
+            "\U00002702-\U000027B0"  # 装饰符号
+            "\U000024C2-\U0001F251"  # 封闭符号
+            "]+",
+            flags=re.UNICODE
+        )
+        text = emoji_pattern.sub('', text)
+        
+        # 移除单独的 emoji 符号
+        text = re.sub(r'[🎤🔊📚🔍💡📝🗑️📖🎧⚠️✅❌🔄💬👤🤖💭📋🌐]', '', text)
+        
+        # 清理多余空格
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        return text
+
     def generate(self, text: str, output_path: str) -> bool:
         """
         生成语音文件
-        
+
         Args:
             text: 要合成的文本
             output_path: 输出文件路径
-        
+
         Returns:
             True 表示成功
         """
         try:
             # 确保输出目录存在
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            
+
+            # 清理文本，移除 emoji
+            clean_text = self._clean_text_for_tts(text)
+
             # 运行异步代码
-            asyncio.run(self._generate_async(text, output_path))
+            asyncio.run(self._generate_async(clean_text, output_path))
             
             # 检查文件是否生成
             if os.path.exists(output_path):
